@@ -6,6 +6,9 @@
 
 package me.paulrobinson;
 
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -68,6 +71,7 @@ public class MapleStoryTimer extends JFrame {
 
     private void pickUpPopUp() {
         pickUpFrame.setVisible(true);
+        playAudio();
         new Thread(() -> {
             try {
                 Thread.sleep(2000);
@@ -97,6 +101,14 @@ public class MapleStoryTimer extends JFrame {
     private void setupPickUpIcon() {
         ImageIcon im = new ImageIcon("src/main/resources/PickUpBetter.png");
         pickUpIcon = new ImageIcon(im.getImage().getScaledInstance(250, 250,  java.awt.Image.SCALE_SMOOTH));
+    }
+
+    private void playAudio() {
+        try {
+            new Player(getClass().getResourceAsStream("/maplemesocollect.mp3")).play();
+        } catch (JavaLayerException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void main(String[] args) {
