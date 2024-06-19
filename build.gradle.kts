@@ -1,10 +1,11 @@
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("edu.sc.seis.launch4j") version "3.0.5"
 }
 
 group = "me.paulrobinson"
-version = "1.2"
+version = "1.3"
 
 repositories {
     mavenCentral()
@@ -25,6 +26,20 @@ tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "me.paulrobinson.MapleStoryTimer"
     }
+}
+
+launch4j {
+    mainClassName = "com.example.myapp.Start"
+    mainClassName = "me.paulrobinson.MapleStoryTimer"
+    icon = "${projectDir}/src/main/resources/maplestorytimer.ico"
+}
+
+tasks.createExe {
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.createAllExecutables {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.shadowJar {
