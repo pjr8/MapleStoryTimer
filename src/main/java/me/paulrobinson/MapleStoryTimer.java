@@ -11,6 +11,8 @@ import javazoom.jl.player.Player;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.util.Objects;
 
 public class MapleStoryTimer extends JFrame {
 
@@ -22,29 +24,47 @@ public class MapleStoryTimer extends JFrame {
     private long lastFarmTime = System.currentTimeMillis();
     private long lastPickupTime;
     private boolean farming = true;
+    private final TimerGraphicsComponent timerGraphicsComponent;
+    private static double scale = 1.0;
 
     public MapleStoryTimer() {
         super("Maplestory Timer");
         setupPickUpIcon();
         setupPopUpFrame();
+        setPreferredSize(new Dimension(425, 100));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultLookAndFeelDecorated(true);
         setUndecorated(true);
         setLocationRelativeTo(null);
         setAlwaysOnTop(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setAutoRequestFocus(false);
         setFocusable(false);
-        setBackground(new Color(128, 128, 128));
+        setOpacity(1f);
+        setBackground(new Color(0, 0, 0, 2));
         double x = (screenSize.width - getSize().width) * 0.75;
         int y = (screenSize.height - getSize().height)/4;
         setLocation((int) x, y);
-        setOpacity(0.75f);
-        JTextPane textPane = new JTextPane();
-        textPane.setBackground(new Color(128, 128, 128));
-        textPane.setFocusable(false);
-        textPane.setText("Farming: 140s");
-        textPane.setFont(new Font("Arial", Font.BOLD, 60));
-        add(textPane);
-        Timer timer = new Timer(10, e -> {
+        timerGraphicsComponent = new TimerGraphicsComponent("test");
+        timerGraphicsComponent.setSize(400, 400);
+        timerGraphicsComponent.setVisible(true);
+        add(timerGraphicsComponent);
+        setVisible(true);
+        pack();
+        FrameDragListener frameDragListener = new FrameDragListener(this);
+        addMouseListener(frameDragListener);
+        addMouseMotionListener(frameDragListener);
+        addMouseWheelListener(MouseWheelListener -> {
+            if (MouseWheelListener.getWheelRotation() > 0) {
+                if (scale <= 0.1) return;
+                setSize(new Dimension(getWidth() - 42, getHeight() - 7));
+                scale -= 0.1;
+            } else {
+                if (scale >= 5.0) return;
+                setSize(new Dimension(getWidth() + 42, getHeight() + 7));
+                scale += 0.1;
+            }
+        });
+        Timer timer = new Timer(100, e -> {
             long currentTime = System.currentTimeMillis();
             if (farming) {
                 if (currentTime - lastFarmTime >= FARM_TIME) {
@@ -52,21 +72,21 @@ public class MapleStoryTimer extends JFrame {
                     farming = false;
                     pickUpPopUp();
                 } else {
-                    textPane.setText("Farming: " + ((FARM_TIME / 1000) - (Math.abs(lastFarmTime - currentTime) / 1000)) + "s");
+                    timerGraphicsComponent.setToDraw("Farming: " + ((FARM_TIME / 1000) - (Math.abs(lastFarmTime - currentTime) / 1000)) + "s");
+                    timerGraphicsComponent.repaint();
                 }
             } else {
                 if (currentTime - lastPickupTime >= PICKUP_TIME) {
                     farming = true;
                     lastFarmTime = currentTime;
                 } else {
-                    textPane.setText("Pickup: " + ((PICKUP_TIME / 1000) - (Math.abs(lastPickupTime - currentTime) / 1000)) + "s");
+                    timerGraphicsComponent.setToDraw("Pickup: " + ((PICKUP_TIME / 1000) - (Math.abs(lastPickupTime - currentTime) / 1000)) + "s");
+                    timerGraphicsComponent.repaint();
                 }
             }
         });
         timer.start();
         setVisible(true);
-        pack();
-
     }
 
     private void pickUpPopUp() {
@@ -100,14 +120,69 @@ public class MapleStoryTimer extends JFrame {
 
     private void setupPickUpIcon() {
         ImageIcon im = new ImageIcon("src/main/resources/PickUpBetter.png");
-        pickUpIcon = new ImageIcon(im.getImage().getScaledInstance(250, 250,  java.awt.Image.SCALE_SMOOTH));
+        pickUpIcon = new ImageIcon(im.getImage().getScaledInstance(250, 250,  Image.SCALE_SMOOTH));
     }
 
     private void playAudio() {
         try {
-            new Player(getClass().getResourceAsStream("/maplemesocollect.mp3")).play();
+            new Player(Objects.requireNonNull(getClass().getResourceAsStream("/maplemesocollect.mp3"))).play();
         } catch (JavaLayerException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    static class TimerGraphicsComponent extends JComponent {
+
+        private String toDraw;
+
+        public TimerGraphicsComponent(String toDraw) {
+            this.toDraw = toDraw;
+        }
+
+        public void setToDraw(String toDraw) {
+            this.toDraw = toDraw;
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            if(g instanceof Graphics2D g2)
+            {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                double fontSizeDouble = 60 * scale;
+                int fontSize = (int) fontSizeDouble;
+                int y = 50;
+                if (scale > 1.0) {
+                    double yDouble = 50 * scale;
+                    y = (int) yDouble;
+                }
+                g2.setFont(new Font("Arial", Font.BOLD, fontSize));
+                g2.setColor(Color.RED);
+                g2.drawString(toDraw,0, y);
+            }
+        }
+    }
+
+    static class FrameDragListener extends MouseAdapter {
+
+        private final JFrame frame;
+        private Point mouseDownCompCoords = null;
+
+        public FrameDragListener(JFrame frame) {
+            this.frame = frame;
+        }
+
+        public void mouseReleased(MouseEvent e) {
+            mouseDownCompCoords = null;
+        }
+
+        public void mousePressed(MouseEvent e) {
+            mouseDownCompCoords = e.getPoint();
+        }
+
+        public void mouseDragged(MouseEvent e) {
+            Point currCoords = e.getLocationOnScreen();
+            frame.setLocation(currCoords.x - mouseDownCompCoords.x, currCoords.y - mouseDownCompCoords.y);
         }
     }
 
