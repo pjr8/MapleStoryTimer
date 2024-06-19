@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
 group = "me.paulrobinson"
@@ -20,7 +21,19 @@ tasks.test {
 }
 
 tasks.withType<Jar> {
+    archiveClassifier.set("")
     manifest {
         attributes["Main-Class"] = "me.paulrobinson.MapleStoryTimer"
     }
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    manifest {
+        attributes["Main-Class"] = "me.paulrobinson.MapleStoryTimer"
+    }
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
