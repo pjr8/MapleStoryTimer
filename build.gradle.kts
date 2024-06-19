@@ -17,3 +17,9 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "me.paulrobinson.MapleStoryTimer"
+    }
+}

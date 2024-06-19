@@ -1,7 +1,7 @@
 /*
     @Author: Paul Robinson
     @Date: 6/18/2024
-    @Description: A simple overlay for Maplestory that will remind you to pick up items before they despawn.
+    @Description: A simple overlay for MapleStory that will remind you to pick up items before they despawn.
  */
 
 package me.paulrobinson;
